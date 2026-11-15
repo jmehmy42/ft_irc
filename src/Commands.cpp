@@ -105,6 +105,7 @@ void executeUser(Server &server, Client &client, std::istringstream &iss)
     if (client.getHasPass() && client.getHasNick() && client.getHasUser())
     {
         client.setIsRegistered(true);
+        std::cout << "Client "<< client.getFd()<<" " << client.getNickName() << " is registered" << std::endl;
         sendMessage(server, client, 001, "Welcome to the IRC server!");
         return;
     }

@@ -1,7 +1,4 @@
 #include "Client.hpp"
-// #include "../includes/Client.hpp"
-// #include <iostream>
-// #include <exception>
 
 Client::Client() : _fd(-1), _passWord(""), _hostName(""), _nickName(""),
                     _userName(""), _realName(""), _buffer(""), _hasPass(false), 

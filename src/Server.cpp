@@ -11,8 +11,8 @@
 /* ************************************************************************** */
 
 #include "Server.hpp"
-#include "Parser.hpp"
 #include "Executor.hpp"
+#include "Commands.hpp"
 
 Server* g_server = NULL;
 
@@ -112,130 +112,6 @@ void Server::run()
                 handleClientMessage(_pollfds[i].fd);
             }
         }
-        // for (std::vector<Client*>::iterator it = _clients.begin();
-        //      it != _clients.end(); ++it)
-        // {
-        //     struct pollfd client_poll;
-        //     client_poll.fd = (*it)->getFd();
-        //     client_poll.events = POLLIN;
-        //     if (!(*it)->getOutputBuffer().empty())
-        //         client_poll.events |= POLLOUT;
-        //     client_poll.revents = 0;
-
-        //     fds.push_back(client_poll);
-        // }
-        // int ret = poll(&fds[0], fds.size(), -1);
-        // if (ret == -1)
-        // {
-        //     if (errno == EINTR)
-        //         continue;
-
-        //     throw std::runtime_error("poll failed");
-        // }
-        // for (int i = static_cast<int>(fds.size()) - 1; i >= 1; --i)
-        // {
-        //     if (fds[i].revents == 0)
-        //         continue;
-        //     Client* client = _clients[i - 1];
-
-        //     if (fds[i].revents & (POLLHUP | POLLERR | POLLNVAL))
-        //     {
-        //         std::cout << "Client disconnected: "
-        //                 << client->getFd() << std::endl;
-
-        //         delete client;
-        //         _clients.erase(_clients.begin() + (i - 1));
-        //         continue;
-        //     }
-        //     if (fds[i].revents & POLLIN)
-        //     {
-        //         char buffer[512];
-
-        //         int bytes = recv(client->getFd(), buffer, sizeof(buffer), 0);
-
-        //         if (bytes == 0)
-        //         {
-        //             std::cout << "Client disconnected: "
-        //                     << client->getFd() << std::endl;
-
-        //             delete client;
-        //             _clients.erase(_clients.begin() + (i - 1));
-        //             continue;
-        //         }
-
-        //         if (bytes > 0)
-        //         {
-        //             client->appendBuffer(std::string(buffer, bytes));
-
-        //             while (client->hasCompleteMessage())
-        //             {
-        //                 std::string line = client->getNextMessage();
-
-        //                 IrcMessage message;
-
-        //                 if (Parser::parse(line, message))
-        //                 {
-        //                     std::string response =
-        //                         _executor.execute(*client, message);
-
-        //                     if (!response.empty())
-        //                         client->appendOutput(response);
-        //                 }
-        //             }
-        //         }
-        //     }
-        //     if (fds[i].revents & POLLOUT)
-        //     {
-        //         std::string& output = client->getOutputBuffer();
-
-        //         if (!output.empty())
-        //         {
-        //             int sent = send(client->getFd(),
-        //                             output.c_str(),
-        //                             output.size(),
-        //                             0);
-
-        //             if (sent > 0)
-        //                 output.erase(0, sent);
-        //             else if (sent == 0)
-        //             {
-        //                 delete client;
-        //                 _clients.erase(_clients.begin() + (i - 1));
-        //                 continue;
-        //             }
-        //         }
-        //     }
-        // }
-        // if (fds[0].revents & POLLIN)
-        // {
-        //     struct sockaddr_in client_addr;
-        //     socklen_t client_len = sizeof(client_addr);
-
-        //     int client_fd = accept(
-        //         _fd,
-        //         (struct sockaddr*)&client_addr,
-        //         &client_len
-        //     );
-
-        //     if (client_fd != -1)
-        //     {
-        //         if (fcntl(client_fd, F_SETFL, O_NONBLOCK) == -1)
-        //         {
-        //             close(client_fd);
-        //             throw std::runtime_error(
-        //                 "Failed to set client non-blocking mode"
-        //             );
-        //         }
-
-        //         Client* new_client = new Client(client_fd);
-        //         _clients.push_back(new_client);
-
-        //         std::cout << "New client connected: "
-        //                 << inet_ntoa(client_addr.sin_addr)
-        //                 << " (fd: " << client_fd << ")"
-        //                 << std::endl;
-        //     }
-        //}
     }
 }
 
@@ -266,7 +142,6 @@ void Server::handleNewConnection()
     Client newClient(clientFd, std::string(host));
 
     _clients[clientFd] = newClient;
-
     std::cout << "Client "<< clientFd << " connected" << std::endl;
 }
 
@@ -296,9 +171,7 @@ void Server::handleClientMessage(int clientFd)
         {
             std::map<int, Client>::iterator it = _clients.find(clientFd);
             if(it != _clients.end())
-            {
                 handleClientDisconnection(clientFd);
-            }
         }
         else
             std::cout << "Recieve failed from client "<< clientFd << std::endl;
@@ -367,7 +240,63 @@ void sendMessage(Server& server, Client& client, int code, const std::string& te
     oss.fill('0');
     oss << code;
     oss << " "
-    << (client.getNickName().empty() ? "*" : client.getNickName()) << " :" << text << "\r\n";
+    << (client.getNickName().empty() ? "*" : client.getNickName()) << " : " << text << "\r\n";
     server.sendMessageToClient(client.getFd(), oss.str());
+}
+
+void Server::broadcastMessage(const std::string& message, int excludeFd)
+{
+    for(std::map<int, Client>::iterator it = _clients.begin(); it!= _clients.end(); ++it)
+    {
+        if(it->first != excludeFd)
+            sendMessageToClient(it->first, message);
+    }
+}
+std::map<std::string, Channel*>& Server::getChannels()
+{
+    return _channels;
+}
+
+std::map<std::string, Channel*>::iterator Server::getChannel(const std::string& name)
+{
+    return _channels.find(name);
+}
+
+void Server::createChannel(const std::string& name, Client& newClient)
+{
+    if(_channels.find(name) != _channels.end())
+        return ;
+    Channel* newChannel = new Channel(name, newClient);
+    //newChannel->addOperator(newClient);
+    _channels[name] = newChannel;
+}
+
+void Server::removeChannel(const std::string& name)
+{
+    std::map<std::string, Channel*>::iterator it = _channels.find(name);
+    if(it != _channels.end())
+    {
+        delete it->second;
+        _channels.erase(it);
+    }
+}
+
+std::map<int, Client>& Server::getClients()
+{
+    return _clients;
+}
+const std::map<int, Client>& Server::getClients() const
+{
+    return _clients;
+}
+
+Client* Server::getClientByNickname(const std::string& nickname)
+{
+    for(std::map<int, Client>::iterator it = _clients.begin(); it != _clients.end(); it++)
+    {
+        if(it->second.getNickName() == nickname)
+            return &it->second;
+    }
+    return NULL;
 }
 
