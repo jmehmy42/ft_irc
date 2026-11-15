@@ -9,7 +9,7 @@ INCLUDES = -Iincludes
 SRC_DIR = src
 OBJ_DIR = obj
 
-SRC = main.cpp
+SRC = main.cpp Server.cpp Client.cpp Parser.cpp Commands.cpp Executor.cpp
 SRCS = $(addprefix $(SRC_DIR)/, $(SRC))
 
 OBJS = $(addprefix $(OBJ_DIR)/, $(SRC:.cpp=.o))
