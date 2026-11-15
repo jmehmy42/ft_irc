@@ -1,7 +1,7 @@
-//#include "Client.hpp"
-#include "../includes/Client.hpp"
-#include <iostream>
-#include <exception>
+#include "Client.hpp"
+// #include "../includes/Client.hpp"
+// #include <iostream>
+// #include <exception>
 
 Client::Client() : _fd(-1), _passWord(""), _hostName(""), _nickName(""),
                     _userName(""), _realName(""), _buffer(""), _hasPass(false), 
@@ -224,7 +224,7 @@ int main()
 
     return 0;
 }*/
-
+/*
 void printTitle(std::string const& title)
 {
     std::cout << "\n========================================\n";
@@ -494,4 +494,4 @@ int main()
     std::cout << "========================================\n";
 
     return 0;
-}
+}*/
