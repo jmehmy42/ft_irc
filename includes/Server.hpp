@@ -40,7 +40,6 @@ class Server
         std::map<int, Client>           _clients; // easy to find client using fd
 	    std::vector<struct pollfd>      _pollfds;
         std::map<std::string, Channel*> _channels;
-           
         // Server(const Server& other);
         // Server& operator=(const Server& other);
         void closeSocketFd();
@@ -48,28 +47,21 @@ class Server
     public:
         Server(int port, const std::string& pass);
         ~Server();
-
         void run();
-        
         void handleNewConnection();
         void handleClientMessage(int clientfd);
         void handleClientDisconnection(int clientfd);
-
         void signalHandler(int signum);
         void sendMessageToClient(int clientfd, const std::string& message);
-
         const std::string& getPassword()const;
         bool    isNickNameTaken(const std::string& nickname) const;
-        
         std::map<std::string, Channel*>&    getChannels();
         std::map<std::string, Channel*>::iterator getChannel(const std::string& name);
         void    createChannel(const std::string& name, Client& newClient);
         void    removeChannel(const std::string& name);
-
         std::map<int, Client>&  getClients();
         const std::map<int, Client>& getClients()const;
         Client* getClientByNickname(const std::string& nickname);
-        
         void    broadcastMessage(const std::string& message, int excludeFd);
 };
     void sendMessage(Server& server, Client& client, int code, const std::string& text);

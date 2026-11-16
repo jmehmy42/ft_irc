@@ -12,5 +12,10 @@ class Executor;
 void executePass(Server& server, Client& client, std::istringstream& iss);
 void executeNick(Server& server, Client& client, std::istringstream& iss);
 void executeUser(Server& server, Client& client, std::istringstream& iss);
+void executeJoin(Server& server, Client& client, std::istringstream& iss);
+void executePrivmsg(Server& server, Client& client, std::istringstream& iss);
+void executePart(Server& server, Client& client, std::istringstream& iss);
+void executeTopic(Server& server, Client& client, std::istringstream& iss);
+void executeKick(Server& server, Client& client, std::istringstream& iss);
 
 #endif
