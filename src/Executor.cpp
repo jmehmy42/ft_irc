@@ -52,6 +52,8 @@ void Executor::execute(Server& server, Client& client,
         executeTopic(server, client, iss);
     else if (command == "PING")
          executePing(server, client, iss);
+    else if (command == "QUIT")
+         executeQuit(server, client, iss);
     else if (command == "PONG)
         ;
     else
@@ -64,6 +66,5 @@ void Executor::execute(Server& server, Client& client,
     //     executeMode(server, client, iss)
     // else if(command == "PART")
     //    executePart(server, client, iss);
-    // else if (command == "QUIT")
-    //     executeQuit(server, client, iss);  
+      
 }

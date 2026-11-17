@@ -63,6 +63,7 @@ class Server
         const std::map<int, Client>& getClients()const;
         Client* getClientByNickname(const std::string& nickname);
         void    broadcastMessage(const std::string& message, int excludeFd);
+		void	notifySharedChannelsQuit(const Client& client, const std::string& quitMessage);
 };
     void sendMessage(Server& server, Client& client, int code, const std::string& text);
 

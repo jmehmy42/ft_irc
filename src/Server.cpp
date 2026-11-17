@@ -70,11 +70,22 @@ Server::Server(int port, const std::string& pass)
 
 Server::~Server()
 {
-    // for(std::map<int, Client*>::iterator it = _clients.begin(); it != _clients.end(); ++it)
-    //     delete it->second;
+    for(size_t i = 0; i < _pollfds.size(); ++i)
+    {
+        if(_pollfds[i].fd != _fd)
+            close(_pollfds[i].fd);
+    }
     _clients.clear();
+    _pollfds.clear();
+
+    for(std::map<std::string, Channel*>::iterator it = _channels.begin(); it != _channels.end(); ++it)
+        delete it->second;
+    _channels.clear();
     if (_fd != -1)
+    {
         close(_fd);
+        _fd = -1;
+    }
 }
 
 void Server::closeSocketFd()
@@ -178,13 +189,55 @@ void Server::handleClientMessage(int clientFd)
     }
 }
 
+void	Server::notifySharedChannelsQuit(const Client& client, const std::string& quitMessage)
+{
+    std::string msg = ":" + client.getNickName() + "!" +
+                            client.getUserName() + "@" +
+                            client.getHostName() + " QUIT :" +
+                            quitMessage + "\r\n"; 
+    for(std::map<int, Client>::iterator it = getClients().begin(); it != getClients().end(); it++)
+    {
+        Client& other = it->second;
+        if(other.getFd() == client.getFd())
+            continue;
+        for(std::map<std::string, Channel*>::iterator ch = getChannels().begin(); ch!= getChannels().end(); ++ch)
+        {
+            if(ch->second->isMember(client) && ch->second->isMember(other))
+            {
+                sendMessageToClient(other.getFd(), msg);
+                break;
+            }
+        }
+    }
+}
+
 void Server::handleClientDisconnection(int clientFd)
 {
     std::cout << "Client "<< clientFd << " disconnected" << std::endl;
     std::map <int, Client> :: iterator itClient = _clients.find(clientFd);
     if(itClient == _clients.end())
         return;
-    
+	//this part removes the disconnected client form all channels befor the client deleted from the server
+	Client& client = itClient->second;
+    for(std::map<std::string, Channel*>::iterator it= _channels.begin(); it != _channels.end();)
+    {
+        Channel* channel = it->second;
+        if(channel->isMember(client))
+            channel->removeClient(&client);
+        if(channel->isOperator(client))
+            channel->removeOperator(client);
+        if(channel->isInvited(client))
+            channel->removeInvitedClient(client);
+        if(channel->isEmpty())
+        {
+            std::map<std::string, Channel*>::iterator toErase = it; ++it;
+            delete toErase->second;
+            _channels.erase(toErase);
+        }
+        else
+            ++it;
+    }
+	
     for(size_t i = 0; i < _pollfds.size(); ++i)
     {
         if(_pollfds[i].fd == clientFd)
