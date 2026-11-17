@@ -514,3 +514,30 @@ void executeKick(Server& server, Client& client, std::istringstream& iss)
     if (channel->isEmpty())
         server.removeChannel(channelName);
 }
+
+void executePing(Server& server, Client& client, std::istringstream& iss)
+{
+    std::string tokenPing;
+    iss >> tokenPing;
+
+    if (tokenPing.empty())
+    {
+        sendMessage(server, client, 409, "No origin specified");
+        return;
+    }
+
+    if (tokenPing[0] == ':')
+        tokenPing.erase(0, 1);
+
+    if (tokenPing.empty())
+    {
+        sendMessage(server, client, 409, "No origin specified");
+        return;
+    }
+
+    std::ostringstream oss;
+    oss << ":" << "ircserv" << " PONG "
+        << "ircserv" << " :" << tokenPing << "\r\n";
+
+    server.sendMessageToClient(client.getFd(), oss.str());
+}
