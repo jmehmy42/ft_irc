@@ -217,7 +217,27 @@ void Server::handleClientDisconnection(int clientFd)
     std::map <int, Client> :: iterator itClient = _clients.find(clientFd);
     if(itClient == _clients.end())
         return;
-    
+	//this part removes the disconnected client form all channels befor the client deleted from the server
+	Client& client = itClient->second;
+    for(std::map<std::string, Channel*>::iterator it= _channels.begin(); it != _channels.end();)
+    {
+        Channel* channel = it->second;
+        if(channel->isMember(client))
+            channel->removeClient(&client);
+        if(channel->isOperator(client))
+            channel->removeOperator(client);
+        if(channel->isInvited(client))
+            channel->removeInvitedClient(client);
+        if(channel->isEmpty())
+        {
+            std::map<std::string, Channel*>::iterator toErase = it; ++it;
+            delete toErase->second;
+            _channels.erase(toErase);
+        }
+        else
+            ++it;
+    }
+	
     for(size_t i = 0; i < _pollfds.size(); ++i)
     {
         if(_pollfds[i].fd == clientFd)
