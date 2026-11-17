@@ -70,11 +70,22 @@ Server::Server(int port, const std::string& pass)
 
 Server::~Server()
 {
-    // for(std::map<int, Client*>::iterator it = _clients.begin(); it != _clients.end(); ++it)
-    //     delete it->second;
+    for(size_t i = 0; i < _pollfds.size(); ++i)
+    {
+        if(_pollfds[i].fd != _fd)
+            close(_pollfds[i].fd);
+    }
     _clients.clear();
+    _pollfds.clear();
+
+    for(std::map<std::string, Channel*>::iterator it = _channels.begin(); it != _channels.end(); ++it)
+        delete it->second;
+    _channels.clear();
     if (_fd != -1)
+    {
         close(_fd);
+        _fd = -1;
+    }
 }
 
 void Server::closeSocketFd()
