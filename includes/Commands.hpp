@@ -17,5 +17,7 @@ void executePrivmsg(Server& server, Client& client, std::istringstream& iss);
 void executePart(Server& server, Client& client, std::istringstream& iss);
 void executeTopic(Server& server, Client& client, std::istringstream& iss);
 void executeKick(Server& server, Client& client, std::istringstream& iss);
+void executeInvite(Server& server, Client& client, std::istringstream& iss);
+void executeMode(Server& server, Client& client, std::istringstream& iss);
 
 #endif
