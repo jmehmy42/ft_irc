@@ -541,3 +541,19 @@ void executePing(Server& server, Client& client, std::istringstream& iss)
 
     server.sendMessageToClient(client.getFd(), oss.str());
 }
+
+void	executeQuit(Server& server, Client& client, std::istringstream& iss)
+{
+	std::string quitMessage;
+	std::getline(iss, quitMessage);
+
+	while (!quitMessage.empty() && quitMessage[0] == ' ')
+        quitMessage.erase(0, 1);
+    if(!quitMessage.empty() && quitMessage[0] == ':')
+        quitMessage.erase(0, 1);
+    if(quitMessage.empty())
+		quitMessage = "Client Quit";
+	
+	server.notifySharedChannelsQuit(client, quitMessage);
+	server.handleClientDisconnection(client.getFd());
+}
