@@ -178,6 +178,28 @@ void Server::handleClientMessage(int clientFd)
     }
 }
 
+void	Server::notifySharedChannelsQuit(const Client& client, const std::string& quitMessage)
+{
+    std::string msg = ":" + client.getNickName() + "!" +
+                            client.getUserName() + "@" +
+                            client.getHostName() + " QUIT :" +
+                            quitMessage + "\r\n"; 
+    for(std::map<int, Client>::iterator it = getClients().begin(); it != getClients().end(); it++)
+    {
+        Client& other = it->second;
+        if(other.getFd() == client.getFd())
+            continue;
+        for(std::map<std::string, Channel*>::iterator ch = getChannels().begin(); ch!= getChannels().end(); ++ch)
+        {
+            if(ch->second->isMember(client) && ch->second->isMember(other))
+            {
+                sendMessageToClient(other.getFd(), msg);
+                break;
+            }
+        }
+    }
+}
+
 void Server::handleClientDisconnection(int clientFd)
 {
     std::cout << "Client "<< clientFd << " disconnected" << std::endl;
