@@ -216,7 +216,9 @@ void Server::handleClientDisconnection(int clientFd)
     std::cout << "Client "<< clientFd << " disconnected" << std::endl;
     std::map <int, Client> :: iterator itClient = _clients.find(clientFd);
     if(itClient == _clients.end())
+    {
         return;
+    }
 	//this part removes the disconnected client form all channels befor the client deleted from the server
 	Client& client = itClient->second;
     for(std::map<std::string, Channel*>::iterator it= _channels.begin(); it != _channels.end();)
@@ -285,6 +287,7 @@ void Server::sendMessageToClient(int clientfd, const std::string& message)
     if(bytesent == -1)
         std::cerr << "send failed to client " << clientfd<< std::endl;
 }
+
 void sendMessage(Server& server, Client& client, int code, const std::string& text)
 {
     std::ostringstream oss;
@@ -293,7 +296,7 @@ void sendMessage(Server& server, Client& client, int code, const std::string& te
     oss.fill('0');
     oss << code;
     oss << " "
-    << (client.getNickName().empty() ? "*" : client.getNickName()) << " : " << text << "\r\n";
+    << (client.getNickName().empty() ? "*" : client.getNickName()) << " :" << text << "\r\n";
     server.sendMessageToClient(client.getFd(), oss.str());
 }
 

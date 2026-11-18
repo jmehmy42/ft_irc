@@ -10,7 +10,7 @@ void executePass(Server &server, Client &client, std::istringstream &iss)
 
     if (client.getIsRegistered())
     {
-        sendMessage(server, client, 462, "You may not reregister");
+        sendMessage(server, client, 462, "You may not registerd");
         return;
     }
     if (password.empty())
@@ -27,8 +27,6 @@ void executePass(Server &server, Client &client, std::istringstream &iss)
     client.setPassWord(password);
     client.setHasPass(true);
 }
-
-// NICK
 
 void executeNick(Server &server, Client &client, std::istringstream &iss)
 {
@@ -67,8 +65,6 @@ void executeNick(Server &server, Client &client, std::istringstream &iss)
     client.setNickName(nickname);
     client.setHasNick(true);
 }
-
-// USER
 
 void executeUser(Server &server, Client &client, std::istringstream &iss)
 {
@@ -114,7 +110,9 @@ void executeUser(Server &server, Client &client, std::istringstream &iss)
 void executeJoin(Server& server, Client& client, std::istringstream& iss)
 {
     std::string channelName;
-    iss >> channelName;
+    std::string key;
+
+    iss >> channelName >> key;
 
     if (!client.getIsRegistered())
     {
@@ -153,10 +151,41 @@ void executeJoin(Server& server, Client& client, std::istringstream& iss)
         if (channel->isMember(client))
             return;
 
+        // Verificar modo +i (Invite Only)
+        if (channel->isInvitedOnly() && !channel->isInvited(client))
+        {
+            sendMessage(server, client, 473,
+                channelName + " :Cannot join channel (+i)");
+            return;
+        }
+
+        // Verificar modo +k (Password)
+        if (channel->isPasswordProtected()
+            && key != channel->getPassword())
+        {
+            sendMessage(server, client, 475,
+                channelName + " :Cannot join channel (+k)");
+            return;
+        }
+
+        // Verificar modo +l (User Limit)
+        if (channel->getUserLimit() > 0
+            && channel->getMemberCount() >= channel->getUserLimit())
+        {
+            sendMessage(server, client, 471,
+                channelName + " :Cannot join channel (+l)");
+            return;
+        }
+
+        // Adicionar o cliente ao canal
         channel->addMember(client);
+
+        // Consumir o convite, se existir
+        channel->removeInvitedClient(client);
     }
 
-    std::string message = ":" + client.getNickName()
+    std::string message =
+        ":" + client.getNickName()
         + "!" + client.getUserName()
         + "@" + client.getHostName()
         + " JOIN :" + channelName + "\r\n";
@@ -515,6 +544,280 @@ void executeKick(Server& server, Client& client, std::istringstream& iss)
         server.removeChannel(channelName);
 }
 
+void executeInvite(Server& server, Client& client, std::istringstream& iss)
+{
+    std::string nickname;
+    std::string channelName;
+
+    if (!client.getIsRegistered())
+    {
+        sendMessage(server, client, 451, "You have not registered");
+        return;
+    }
+
+    iss >> nickname >> channelName;
+
+    if (nickname.empty() || channelName.empty())
+    {
+        sendMessage(server, client, 461, "INVITE :Not enough parameters");
+        return;
+    }
+
+    std::map<std::string, Channel*>::iterator it =
+        server.getChannel(channelName);
+
+    if (it == server.getChannels().end())
+    {
+        sendMessage(server, client, 403, channelName + " :No such channel");
+        return;
+    }
+
+    Channel* channel = it->second;
+
+    if (!channel->isMember(client))
+    {
+        sendMessage(server, client, 442,
+            channelName + " :You're not on that channel");
+        return;
+    }
+
+    Client* target = server.getClientByNickname(nickname);
+
+    if (target == NULL)
+    {
+        sendMessage(server, client, 401, nickname + " :No such nick");
+        return;
+    }
+
+    if (channel->isMember(*target))
+    {
+        sendMessage(server, client, 443,
+            nickname + " " + channelName + " :is already on channel");
+        return;
+    }
+
+    if (channel->isInvitedOnly() && !channel->isOperator(client))
+    {
+        sendMessage(server, client, 482,
+            channelName + " :You're not channel operator");
+        return;
+    }
+
+    channel->addInvitedClient(*target);
+
+    sendMessage(server, client, 341,
+        nickname + " " + channelName);
+
+    std::string message =
+        ":" + client.getNickName() +
+        "!" + client.getUserName() +
+        "@" + client.getHostName() +
+        " INVITE " + nickname + " :" + channelName + "\r\n";
+
+    server.sendMessageToClient(target->getFd(), message);
+}
+
+void executeMode(Server& server, Client& client, std::istringstream& iss)
+{
+    std::string channelName;
+    std::string modes;
+
+    if (!client.getIsRegistered())
+    {
+        sendMessage(server, client, 451, "You have not registered");
+        return;
+    }
+
+    iss >> channelName;
+
+    if (channelName.empty())
+    {
+        sendMessage(server, client, 461, "MODE :Not enough parameters");
+        return;
+    }
+
+    std::map<std::string, Channel*>::iterator it =
+        server.getChannel(channelName);
+
+    if (it == server.getChannels().end())
+    {
+        sendMessage(server, client, 403, channelName + " :No such channel");
+        return;
+    }
+
+    Channel* channel = it->second;
+
+    if (!channel->isMember(client))
+    {
+        sendMessage(server, client, 442,
+            channelName + " :You're not on that channel");
+        return;
+    }
+
+    iss >> modes;
+
+    // Consultar os modos atuais
+    if (modes.empty())
+    {
+        sendMessage(server, client, 324,
+            channelName + " " + channel->getModeStr()
+            + " " + channel->getModeArguments());
+        return;
+    }
+
+    if (!channel->isOperator(client))
+    {
+        sendMessage(server, client, 482,
+            channelName + " :You're not channel operator");
+        return;
+    }
+
+    bool adding = true;
+    std::string argument;
+    std::string appliedModes;
+    std::string appliedArguments;
+
+    for (std::string::size_type i = 0; i < modes.size(); ++i)
+    {
+        char mode = modes[i];
+
+        if (mode == '+')
+        {
+            adding = true;
+            appliedModes += '+';
+            continue;
+        }
+        if (mode == '-')
+        {
+            adding = false;
+            appliedModes += '-';
+            continue;
+        }
+
+        if (mode == 'i')
+        {
+            channel->setInvitedOnly(adding);
+            appliedModes += 'i';
+        }
+        else if (mode == 't')
+        {
+            channel->setTopicRestricted(adding);
+            appliedModes += 't';
+        }
+        else if (mode == 'k')
+        {
+            if (adding)
+            {
+                if (!(iss >> argument) || argument.empty())
+                {
+                    sendMessage(server, client, 461,
+                        "MODE :Not enough parameters");
+                    return;
+                }
+
+                channel->setPassword(argument);
+                channel->setPasswordProtected(true);
+                appliedArguments += " " + argument;
+            }
+            else
+            {
+                channel->setPassword("");
+                channel->setPasswordProtected(false);
+            }
+
+            appliedModes += 'k';
+        }
+        else if (mode == 'o')
+        {
+            if (!(iss >> argument))
+            {
+                sendMessage(server, client, 461,
+                    "MODE :Not enough parameters");
+                return;
+            }
+
+            Client* target = server.getClientByNickname(argument);
+
+            if (target == NULL)
+            {
+                sendMessage(server, client, 401,
+                    argument + " :No such nick");
+                return;
+            }
+
+            if (!channel->isMember(*target))
+            {
+                sendMessage(server, client, 441,
+                    argument + " " + channelName
+                    + " :They aren't on that channel");
+                return;
+            }
+
+            if (adding)
+                channel->addOperator(*target);
+            else
+                channel->removeOperator(*target);
+
+            appliedModes += 'o';
+            appliedArguments += " " + argument;
+        }
+        else if (mode == 'l')
+        {
+            if (adding)
+            {
+                if (!(iss >> argument))
+                {
+                    sendMessage(server, client, 461,
+                        "MODE :Not enough parameters");
+                    return;
+                }
+
+                std::istringstream numberStream(argument);
+                size_t limit;
+                char extra;
+
+                if (!(numberStream >> limit) ||
+                    (numberStream >> extra) || limit == 0)
+                {
+                    sendMessage(server, client, 461,
+                        "MODE :Invalid user limit");
+                    return;
+                }
+
+                channel->setUserLimit(limit);
+                appliedArguments += " " + argument;
+            }
+            else
+            {
+                channel->setUserLimit(0);
+            }
+
+            appliedModes += 'l';
+        }
+        else
+        {
+            sendMessage(server, client, 472,
+                std::string(1, mode) + " :is unknown mode char to me");
+            return;
+        }
+    }
+
+    std::string message =
+        ":" + client.getNickName() +
+        "!" + client.getUserName() +
+        "@" + client.getHostName() +
+        " MODE " + channelName + " " +
+        appliedModes + appliedArguments + "\r\n";
+
+    std::vector<Client*> members = channel->getMembers();
+
+    for (std::vector<Client*>::iterator member = members.begin();
+         member != members.end(); ++member)
+    {
+        server.sendMessageToClient((*member)->getFd(), message);
+    }
+}
+
 void executePing(Server& server, Client& client, std::istringstream& iss)
 {
     std::string tokenPing;
@@ -556,4 +859,55 @@ void	executeQuit(Server& server, Client& client, std::istringstream& iss)
 	
 	server.notifySharedChannelsQuit(client, quitMessage);
 	server.handleClientDisconnection(client.getFd());
+}
+
+void executeCap(Server& server, Client& client, std::istringstream& iss)
+{
+    std::string subCommand;
+    iss >> subCommand;
+    std::string target = client.getNickName();
+
+    if (target.empty())
+    {
+        target = "*";
+    }
+        if (subCommand == "LS")
+    {
+        server.sendMessageToClient(client.getFd(),
+            ":localhost CAP " + target + " LS :\r\n");
+    }
+    else if (subCommand == "LIST")
+    {
+        server.sendMessageToClient(client.getFd(),
+            ":localhost CAP " + target + " LIST :\r\n");
+    }
+    else if (subCommand == "REQ")
+    {
+        std::string requested;
+        std::getline(iss, requested);
+
+        size_t pos = requested.find_first_not_of(" \t");
+
+        if (pos != std::string::npos)
+            requested = requested.substr(pos);
+        else
+            requested.clear();
+
+        if (!requested.empty() && requested[0] == ':')
+            requested.erase(0, 1);
+
+        pos = requested.find_first_not_of(" \t");
+
+        if (pos != std::string::npos)
+            requested = requested.substr(pos);
+        else
+            requested.clear();
+
+        server.sendMessageToClient(client.getFd(),
+            ":localhost CAP " + target + " NAK :" + requested + "\r\n");
+    }
+    else if (subCommand == "END")
+    {
+        return;
+    }
 }
