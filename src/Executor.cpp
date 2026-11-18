@@ -60,9 +60,8 @@ void Executor::execute(Server& server, Client& client,
         executeQuit(server, client, iss);
     else if(command == "PONG")
         return;
+    else if(command == "CAP")
+         executeCap(server, client, iss);
     else
         sendMessage(server, client, 421, "unknown command");
-        // else if(command == "CAP")
-    //      executeCap(server, client, iss);
-    
 }
