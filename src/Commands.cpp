@@ -114,9 +114,13 @@ void executeUser(Server &server, Client &client, std::istringstream &iss)
 void executeJoin(Server& server, Client& client, std::istringstream& iss)
 {
     std::string channelName;
+<<<<<<< HEAD
     std::string key;
 
     iss >> channelName >> key;
+=======
+    iss >> channelName;
+>>>>>>> origin/jmehmy
 
     if (!client.getIsRegistered())
     {
@@ -141,7 +145,10 @@ void executeJoin(Server& server, Client& client, std::istringstream& iss)
 
     Channel* channel;
 
+<<<<<<< HEAD
     // Se o canal não existir, cria-o
+=======
+>>>>>>> origin/jmehmy
     if (it == server.getChannels().end())
     {
         server.createChannel(channelName, client);
@@ -156,6 +163,7 @@ void executeJoin(Server& server, Client& client, std::istringstream& iss)
         if (channel->isMember(client))
             return;
 
+<<<<<<< HEAD
         // Verificar modo +i (Invite Only)
         if (channel->isInvitedOnly() && !channel->isInvited(client))
         {
@@ -191,6 +199,12 @@ void executeJoin(Server& server, Client& client, std::istringstream& iss)
 
     std::string message =
         ":" + client.getNickName()
+=======
+        channel->addMember(client);
+    }
+
+    std::string message = ":" + client.getNickName()
+>>>>>>> origin/jmehmy
         + "!" + client.getUserName()
         + "@" + client.getHostName()
         + " JOIN :" + channelName + "\r\n";
@@ -549,6 +563,7 @@ void executeKick(Server& server, Client& client, std::istringstream& iss)
         server.removeChannel(channelName);
 }
 
+<<<<<<< HEAD
 void executeInvite(Server& server, Client& client, std::istringstream& iss)
 {
     std::string nickname;
@@ -822,3 +837,47 @@ void executeMode(Server& server, Client& client, std::istringstream& iss)
         server.sendMessageToClient((*member)->getFd(), message);
     }
 }
+=======
+void executePing(Server& server, Client& client, std::istringstream& iss)
+{
+    std::string tokenPing;
+    iss >> tokenPing;
+
+    if (tokenPing.empty())
+    {
+        sendMessage(server, client, 409, "No origin specified");
+        return;
+    }
+
+    if (tokenPing[0] == ':')
+        tokenPing.erase(0, 1);
+
+    if (tokenPing.empty())
+    {
+        sendMessage(server, client, 409, "No origin specified");
+        return;
+    }
+
+    std::ostringstream oss;
+    oss << ":" << "ircserv" << " PONG "
+        << "ircserv" << " :" << tokenPing << "\r\n";
+
+    server.sendMessageToClient(client.getFd(), oss.str());
+}
+
+void	executeQuit(Server& server, Client& client, std::istringstream& iss)
+{
+	std::string quitMessage;
+	std::getline(iss, quitMessage);
+
+	while (!quitMessage.empty() && quitMessage[0] == ' ')
+        quitMessage.erase(0, 1);
+    if(!quitMessage.empty() && quitMessage[0] == ':')
+        quitMessage.erase(0, 1);
+    if(quitMessage.empty())
+		quitMessage = "Client Quit";
+	
+	server.notifySharedChannelsQuit(client, quitMessage);
+	server.handleClientDisconnection(client.getFd());
+}
+>>>>>>> origin/jmehmy

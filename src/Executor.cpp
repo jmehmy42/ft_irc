@@ -54,15 +54,15 @@ void Executor::execute(Server& server, Client& client,
         executeInvite(server, client, iss);
     else if(command == "MODE")
         executeMode(server, client, iss);
+    else if (command == "PING")
+        executePing(server, client, iss);
+    else if (command == "QUIT")
+        executeQuit(server, client, iss);
+    else if(command == "PONG")
+        return;
     else
         sendMessage(server, client, 421, "unknown command");
         // else if(command == "CAP")
     //      executeCap(server, client, iss);
-    // else if (command == "PING")
-    //     executePing(server, client, iss);
-    // else if (command == "QUIT")
-    //     executeQuit(server, client, iss);
-    // else if(command == "PONG")
-        return;
     
 }
