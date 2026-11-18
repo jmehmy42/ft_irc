@@ -10,7 +10,7 @@ void executePass(Server &server, Client &client, std::istringstream &iss)
 
     if (client.getIsRegistered())
     {
-        sendMessage(server, client, 462, "You may not reregister");
+        sendMessage(server, client, 462, "You may not registerd");
         return;
     }
     if (password.empty())
@@ -27,8 +27,6 @@ void executePass(Server &server, Client &client, std::istringstream &iss)
     client.setPassWord(password);
     client.setHasPass(true);
 }
-
-// NICK
 
 void executeNick(Server &server, Client &client, std::istringstream &iss)
 {
@@ -67,8 +65,6 @@ void executeNick(Server &server, Client &client, std::istringstream &iss)
     client.setNickName(nickname);
     client.setHasNick(true);
 }
-
-// USER
 
 void executeUser(Server &server, Client &client, std::istringstream &iss)
 {
@@ -114,13 +110,9 @@ void executeUser(Server &server, Client &client, std::istringstream &iss)
 void executeJoin(Server& server, Client& client, std::istringstream& iss)
 {
     std::string channelName;
-<<<<<<< HEAD
     std::string key;
 
     iss >> channelName >> key;
-=======
-    iss >> channelName;
->>>>>>> origin/jmehmy
 
     if (!client.getIsRegistered())
     {
@@ -145,10 +137,6 @@ void executeJoin(Server& server, Client& client, std::istringstream& iss)
 
     Channel* channel;
 
-<<<<<<< HEAD
-    // Se o canal não existir, cria-o
-=======
->>>>>>> origin/jmehmy
     if (it == server.getChannels().end())
     {
         server.createChannel(channelName, client);
@@ -163,7 +151,6 @@ void executeJoin(Server& server, Client& client, std::istringstream& iss)
         if (channel->isMember(client))
             return;
 
-<<<<<<< HEAD
         // Verificar modo +i (Invite Only)
         if (channel->isInvitedOnly() && !channel->isInvited(client))
         {
@@ -199,12 +186,6 @@ void executeJoin(Server& server, Client& client, std::istringstream& iss)
 
     std::string message =
         ":" + client.getNickName()
-=======
-        channel->addMember(client);
-    }
-
-    std::string message = ":" + client.getNickName()
->>>>>>> origin/jmehmy
         + "!" + client.getUserName()
         + "@" + client.getHostName()
         + " JOIN :" + channelName + "\r\n";
@@ -563,7 +544,6 @@ void executeKick(Server& server, Client& client, std::istringstream& iss)
         server.removeChannel(channelName);
 }
 
-<<<<<<< HEAD
 void executeInvite(Server& server, Client& client, std::istringstream& iss)
 {
     std::string nickname;
@@ -837,7 +817,7 @@ void executeMode(Server& server, Client& client, std::istringstream& iss)
         server.sendMessageToClient((*member)->getFd(), message);
     }
 }
-=======
+
 void executePing(Server& server, Client& client, std::istringstream& iss)
 {
     std::string tokenPing;
@@ -880,4 +860,54 @@ void	executeQuit(Server& server, Client& client, std::istringstream& iss)
 	server.notifySharedChannelsQuit(client, quitMessage);
 	server.handleClientDisconnection(client.getFd());
 }
->>>>>>> origin/jmehmy
+
+void executeCap(Server& server, Client& client, std::istringstream& iss)
+{
+    std::string subCommand;
+    iss >> subCommand;
+    std::string target = client.getNickName();
+
+    if (target.empty())
+    {
+        target = "*";
+    }
+        if (subCommand == "LS")
+    {
+        server.sendMessageToClient(client.getFd(),
+            ":localhost CAP " + target + " LS :\r\n");
+    }
+    else if (subCommand == "LIST")
+    {
+        server.sendMessageToClient(client.getFd(),
+            ":localhost CAP " + target + " LIST :\r\n");
+    }
+    else if (subCommand == "REQ")
+    {
+        std::string requested;
+        std::getline(iss, requested);
+
+        size_t pos = requested.find_first_not_of(" \t");
+
+        if (pos != std::string::npos)
+            requested = requested.substr(pos);
+        else
+            requested.clear();
+
+        if (!requested.empty() && requested[0] == ':')
+            requested.erase(0, 1);
+
+        pos = requested.find_first_not_of(" \t");
+
+        if (pos != std::string::npos)
+            requested = requested.substr(pos);
+        else
+            requested.clear();
+
+        server.sendMessageToClient(client.getFd(),
+            ":localhost CAP " + target + " NAK :" + requested + "\r\n");
+    }
+    else if (subCommand == "END")
+    {
+        return;
+    }
+}
