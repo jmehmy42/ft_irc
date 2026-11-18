@@ -70,6 +70,13 @@ Server::Server(int port, const std::string& pass)
 
 Server::~Server()
 {
+<<<<<<< HEAD
+    // for(std::map<int, Client*>::iterator it = _clients.begin(); it != _clients.end(); ++it)
+    //     delete it->second;
+    _clients.clear();
+    if (_fd != -1)
+        close(_fd);
+=======
     for(size_t i = 0; i < _pollfds.size(); ++i)
     {
         if(_pollfds[i].fd != _fd)
@@ -86,6 +93,7 @@ Server::~Server()
         close(_fd);
         _fd = -1;
     }
+>>>>>>> origin/jmehmy
 }
 
 void Server::closeSocketFd()
