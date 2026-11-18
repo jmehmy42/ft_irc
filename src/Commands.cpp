@@ -10,7 +10,7 @@ void executePass(Server &server, Client &client, std::istringstream &iss)
 
     if (client.getIsRegistered())
     {
-        sendMessage(server, client, 462, "You may not reregister");
+        sendMessage(server, client, 462, "You may not registerd");
         return;
     }
     if (password.empty())
