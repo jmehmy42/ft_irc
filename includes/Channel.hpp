@@ -18,6 +18,7 @@ class Channel
         std::string             _name;
         std::string             _topic;
         std::vector<Client*>    _clients;
+        std::vector<Client*>    _voices;
         bool                    _inviteOnly;
         bool                    _topicRestricted;
         bool                    _passwordProtected;
@@ -74,6 +75,9 @@ class Channel
         size_t                      getUserLimit()const;
         void                        setUserLimit(size_t limit);
         std::string                 getModeStr()const;
+        void addVoice(Client& client);
+        void removeVoice(Client& client);
+        bool isVoice(const Client& client) const;
         std::string                 getModeArguments()const;
 
         void                        broadcastToMembers(const std::string& message, int excludeFd);
