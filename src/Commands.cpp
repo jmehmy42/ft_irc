@@ -10,7 +10,7 @@ void executePass(Server &server, Client &client, std::istringstream &iss)
 
     if (client.getIsRegistered())
     {
-        sendMessage(server, client, 462, "You may not registerd");
+        sendMessage(server, client, 462, "You may not reregister");
         return;
     }
     if (password.empty())
@@ -70,7 +70,7 @@ void executeUser(Server &server, Client &client, std::istringstream &iss)
 {
     if (client.getIsRegistered())
     {
-        sendMessage(server, client, 462, "You may not reregister");
+        sendMessage(server, client, 462, "You may not rereregister");
         return;
     }
     if (!client.getHasPass())
@@ -80,7 +80,7 @@ void executeUser(Server &server, Client &client, std::istringstream &iss)
     }
     if (client.getHasUser())
     {
-        sendMessage(server, client, 462, "you may not register");
+        sendMessage(server, client, 462, "you may not reregister");
         return;
     }
     std::string username, hostname, servername, realname;
