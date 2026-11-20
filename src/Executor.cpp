@@ -6,7 +6,7 @@
 /*   By: kwillian <kwillian@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/11/11 03:49:11 by kwillian          #+#    #+#             */
-/*   Updated: 2026/11/14 14:52:04 by kwillian         ###   ########.fr       */
+/*   Updated: 2026/11/20 14:11:50 by kwillian         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,7 +33,6 @@ void Executor::execute(Server& server, Client& client,
         return;
     for (size_t i = 0; i < command.size(); ++i)
         command[i] = std::toupper(command[i]);
-    
     if (command == "PASS")
         executePass(server, client, iss);
     else if (command == "NICK")
@@ -42,6 +41,8 @@ void Executor::execute(Server& server, Client& client,
         executeUser(server, client, iss);
     else if(command == "JOIN")
         executeJoin(server, client, iss);
+    else if (command == "NAMES")
+        executeNames(server, client, iss);
     else if (command == "PRIVMSG")
         executePrivmsg(server, client, iss);
     else if(command == "PART")

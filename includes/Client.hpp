@@ -5,6 +5,7 @@
 #include <cstddef>
 #include <iostream>
 #include <exception>
+#include <vector>
 
 #define LINE_MAX 512
 #define BUFFER_MAX 1024
@@ -24,6 +25,7 @@ class Client
         bool        _hasNick;
         bool        _hasUser;
         bool        _isRegistered;
+        std::vector<std::string> _capabilities;
 
     public:
         Client();
@@ -58,6 +60,10 @@ class Client
         void            appendToBuffer(const std::string& data);
         bool            hasCompleteCommand()const;
         std::string     extractNextCommand();
+        void addCapability(const std::string& capability);
+        void removeCapability(const std::string& capability);
+        bool hasCapability(const std::string& capability) const;
+        const std::vector<std::string>& getCapabilities() const;
 };
 
 #endif

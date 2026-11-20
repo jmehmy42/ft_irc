@@ -22,5 +22,6 @@ void executeQuit(Server& server, Client& client, std::istringstream& iss);
 void executeInvite(Server& server, Client& client, std::istringstream& iss);
 void executeMode(Server& server, Client& client, std::istringstream& iss);
 void executeCap(Server& server, Client& client, std::istringstream& iss);
-
+void executeNames(Server& server, Client& client,
+                  std::istringstream& iss);
 #endif

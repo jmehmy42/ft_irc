@@ -24,13 +24,11 @@ Server::Server(int port, const std::string& pass)
 	_fd = socket(AF_INET, SOCK_STREAM, 0);
 	if(_fd == -1)
 		throw std::runtime_error("socket creation failed!");
-
     if (fcntl(_fd, F_SETFL, O_NONBLOCK) == -1)
     {
         closeSocketFd();
         throw std::runtime_error("Failed to set non-blocking mode");
     }
-
     int opt = 1;
     if (setsockopt(_fd, SOL_SOCKET, SO_REUSEADDR,
                    &opt, sizeof(opt)) == -1)
@@ -38,7 +36,6 @@ Server::Server(int port, const std::string& pass)
         closeSocketFd();
         throw std::runtime_error("Failed to set socket options");
     }
-
     struct sockaddr_in addr;
     addr.sin_family = AF_INET;
     addr.sin_addr.s_addr = htonl(INADDR_ANY);
@@ -53,10 +50,8 @@ Server::Server(int port, const std::string& pass)
         closeSocketFd();
         throw std::runtime_error("Failed to listen");
     }
-    
     std::cout << "Server listening on port "
               << _port << std::endl;
-    
     struct sigaction sa;
     std::memset(&sa, 0, sizeof(sa));
     sa.sa_handler = handleSignal;
@@ -77,7 +72,6 @@ Server::~Server()
     }
     _clients.clear();
     _pollfds.clear();
-
     for(std::map<std::string, Channel*>::iterator it = _channels.begin(); it != _channels.end(); ++it)
         delete it->second;
     _channels.clear();
@@ -136,7 +130,6 @@ void Server::handleNewConnection()
         throw std::runtime_error("Accept failed!");
         return ;
     }
-
     if(fcntl(clientFd, F_SETFL, O_NONBLOCK) == -1)
     {
         closeSocketFd();
@@ -147,12 +140,9 @@ void Server::handleNewConnection()
     pfd.events = POLLIN;
     pfd.revents = 0;
     _pollfds.push_back(pfd);
-
     char host[INET_ADDRSTRLEN];
     inet_ntop(AF_INET, &clientAddr.sin_addr, host, INET_ADDRSTRLEN);
-    Client newClient(clientFd, std::string(host));
-
-    _clients[clientFd] = newClient;
+    _clients.insert(std::make_pair(clientFd, Client(clientFd, std::string(host))));
     std::cout << "Client "<< clientFd << " connected" << std::endl;
 }
 
@@ -239,7 +229,6 @@ void Server::handleClientDisconnection(int clientFd)
         else
             ++it;
     }
-	
     for(size_t i = 0; i < _pollfds.size(); ++i)
     {
         if(_pollfds[i].fd == clientFd)
@@ -248,7 +237,6 @@ void Server::handleClientDisconnection(int clientFd)
             break;
         }
     }
-
     close(clientFd);
     _clients.erase(itClient);
 }
@@ -258,6 +246,7 @@ static void handleSignal(int signum)
     if(g_server)
         g_server->signalHandler(signum);
 }
+
 void Server::signalHandler(int signum)
 {
     (void)signum;
@@ -341,6 +330,7 @@ std::map<int, Client>& Server::getClients()
 {
     return _clients;
 }
+
 const std::map<int, Client>& Server::getClients() const
 {
     return _clients;
@@ -355,4 +345,3 @@ Client* Server::getClientByNickname(const std::string& nickname)
     }
     return NULL;
 }
-
