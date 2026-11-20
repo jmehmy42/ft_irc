@@ -20,7 +20,8 @@ void executePass(Server &server, Client &client, std::istringstream &iss)
     }
     if (password != server.getPassword())
     {
-        sendMessage(server, client, 464, "Password incorrect");
+        client.setHasPass(false);
+		sendMessage(server, client, 464, "Password incorrect");
         return;
     }
 
