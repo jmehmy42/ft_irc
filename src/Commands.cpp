@@ -10,7 +10,7 @@ void executePass(Server &server, Client &client, std::istringstream &iss)
 
     if (client.getIsRegistered())
     {
-        sendMessage(server, client, 462, "You may not reregister");
+        sendMessage(server, client, 462, "You may not registerd");
         return;
     }
     if (password.empty())
@@ -111,32 +111,25 @@ void executeJoin(Server& server, Client& client, std::istringstream& iss)
 {
     std::string channelName;
     std::string key;
-
     iss >> channelName >> key;
-
     if (!client.getIsRegistered())
     {
         sendMessage(server, client, 451, "You have not registered");
         return;
     }
-
     if (channelName.empty())
     {
         sendMessage(server, client, 461, "JOIN :Not enough parameters");
         return;
     }
-
     if (channelName[0] != '#')
     {
         sendMessage(server, client, 403, channelName + " :No such channel");
         return;
     }
-
     std::map<std::string, Channel*>::iterator it =
         server.getChannel(channelName);
-
     Channel* channel;
-
     if (it == server.getChannels().end())
     {
         server.createChannel(channelName, client);
@@ -150,7 +143,6 @@ void executeJoin(Server& server, Client& client, std::istringstream& iss)
 
         if (channel->isMember(client))
             return;
-
         // Verificar modo +i (Invite Only)
         if (channel->isInvitedOnly() && !channel->isInvited(client))
         {
@@ -158,7 +150,6 @@ void executeJoin(Server& server, Client& client, std::istringstream& iss)
                 channelName + " :Cannot join channel (+i)");
             return;
         }
-
         // Verificar modo +k (Password)
         if (channel->isPasswordProtected()
             && key != channel->getPassword())
@@ -176,20 +167,14 @@ void executeJoin(Server& server, Client& client, std::istringstream& iss)
                 channelName + " :Cannot join channel (+l)");
             return;
         }
-
-        // Adicionar o cliente ao canal
         channel->addMember(client);
-
-        // Consumir o convite, se existir
         channel->removeInvitedClient(client);
     }
-
     std::string message =
         ":" + client.getNickName()
         + "!" + client.getUserName()
         + "@" + client.getHostName()
         + " JOIN :" + channelName + "\r\n";
-
     std::vector<Client*> members = channel->getMembers();
 
     for (std::vector<Client*>::iterator member = members.begin();
@@ -761,6 +746,40 @@ void executeMode(Server& server, Client& client, std::istringstream& iss)
             appliedModes += 'o';
             appliedArguments += " " + argument;
         }
+        else if (mode == 'v')
+        {
+            if (!(iss >> argument))
+            {
+                sendMessage(server, client, 461,
+                    "MODE :Not enough parameters");
+                return;
+            }
+
+            Client* target = server.getClientByNickname(argument);
+
+            if (target == NULL)
+            {
+                sendMessage(server, client, 401,
+                    argument + " :No such nick");
+                return;
+            }
+
+            if (!channel->isMember(*target))
+            {
+                sendMessage(server, client, 441,
+                    argument + " " + channelName
+                    + " :They aren't on that channel");
+                return;
+            }
+
+            if (adding)
+                channel->addVoice(*target);
+            else
+                channel->removeVoice(*target);
+
+            appliedModes += 'v';
+            appliedArguments += " " + argument;
+        }
         else if (mode == 'l')
         {
             if (adding)
@@ -821,11 +840,15 @@ void executeMode(Server& server, Client& client, std::istringstream& iss)
 void executePing(Server& server, Client& client, std::istringstream& iss)
 {
     std::string tokenPing;
-    std::getline(iss, tokenPing);
+    iss >> tokenPing;
 
-    while (!tokenPing.empty() && tokenPing[0] == ' ')
-        tokenPing.erase(0, 1);
-    if (!tokenPing.empty() && tokenPing[0] == ':')
+    if (tokenPing.empty())
+    {
+        sendMessage(server, client, 409, "No origin specified");
+        return;
+    }
+
+    if (tokenPing[0] == ':')
         tokenPing.erase(0, 1);
 
     if (tokenPing.empty())
@@ -861,49 +884,179 @@ void executeCap(Server& server, Client& client, std::istringstream& iss)
 {
     std::string subCommand;
     iss >> subCommand;
+
     std::string target = client.getNickName();
 
     if (target.empty())
-    {
         target = "*";
-    }
-        if (subCommand == "LS")
+
+    // CAP LS
+    if (subCommand == "LS")
     {
         server.sendMessageToClient(client.getFd(),
-            ":localhost CAP " + target + " LS :\r\n");
+            ":localhost CAP " + target + " LS :multi-prefix\r\n");
     }
+
+    // CAP LIST
     else if (subCommand == "LIST")
     {
+        std::string capabilities;
+
+        const std::vector<std::string>& caps = client.getCapabilities();
+
+        for (std::vector<std::string>::const_iterator it = caps.begin();
+             it != caps.end(); ++it)
+        {
+            if (!capabilities.empty())
+                capabilities += " ";
+
+            capabilities += *it;
+        }
+
         server.sendMessageToClient(client.getFd(),
-            ":localhost CAP " + target + " LIST :\r\n");
+            ":localhost CAP " + target + " LIST :" + capabilities + "\r\n");
     }
     else if (subCommand == "REQ")
     {
         std::string requested;
         std::getline(iss, requested);
-
         size_t pos = requested.find_first_not_of(" \t");
-
         if (pos != std::string::npos)
             requested = requested.substr(pos);
         else
             requested.clear();
-
         if (!requested.empty() && requested[0] == ':')
             requested.erase(0, 1);
-
         pos = requested.find_first_not_of(" \t");
-
         if (pos != std::string::npos)
             requested = requested.substr(pos);
         else
             requested.clear();
+        pos = requested.find_last_not_of(" \t");
+        if (pos != std::string::npos)
+            requested.erase(pos + 1);
+        std::istringstream reqStream(requested);
+        std::vector<std::string> tokens;
+        std::string token;
+        bool valid = true;
+        while (reqStream >> token)
+        {
+            std::string capability = token;
+
+            if (capability[0] == '+' || capability[0] == '-')
+                capability.erase(0, 1);
+
+            if (capability != "multi-prefix")
+                valid = false;
+            tokens.push_back(token);
+        }
+        if (tokens.empty())
+            valid = false;
+        if (!valid)
+        {
+            server.sendMessageToClient(client.getFd(),
+                ":localhost CAP " + target + " NAK :" + requested + "\r\n");
+            return;
+        }
+        for (std::vector<std::string>::iterator it = tokens.begin();
+             it != tokens.end(); ++it)
+        {
+            if ((*it)[0] == '-')
+            {
+                std::string capability = it->substr(1);
+                client.removeCapability(capability);
+            }
+            else
+            {
+                std::string capability = *it;
+
+                if (capability[0] == '+')
+                    capability.erase(0, 1);
+
+                client.addCapability(capability);
+            }
+        }
 
         server.sendMessageToClient(client.getFd(),
-            ":localhost CAP " + target + " NAK :" + requested + "\r\n");
+            ":localhost CAP " + target + " ACK :" + requested + "\r\n");
     }
     else if (subCommand == "END")
     {
         return;
     }
+}
+
+void executeNames(Server& server, Client& client, std::istringstream& iss)
+{
+    std::string channelName;
+    iss >> channelName;
+    std::map<std::string, Channel*>& channels = server.getChannels();
+    if (!channelName.empty())
+    {
+        std::map<std::string, Channel*>::iterator it =
+            channels.find(channelName);
+        if (it == channels.end())
+            return;
+        Channel* channel = it->second;
+        std::vector<Client*> members = channel->getMembers();
+        std::string names;
+        for (std::vector<Client*>::iterator m = members.begin();
+             m != members.end(); ++m)
+        {
+            if (client.hasCapability("multi-prefix"))
+            {
+                if (channel->isOperator(**m))
+                    names += "@";
+                if (channel->isVoice(**m))
+                    names += "+";
+            }
+            else
+            {
+                if (channel->isOperator(**m))
+                    names += "@";
+                else if (channel->isVoice(**m))
+                    names += "+";
+            }
+            names += (*m)->getNickName() + " ";
+        }
+        server.sendMessageToClient(client.getFd(),
+            ":localhost 353 " + client.getNickName()
+            + " = " + channelName + " :" + names + "\r\n");
+        server.sendMessageToClient(client.getFd(),
+            ":localhost 366 " + client.getNickName()
+            + " " + channelName + " :End of /NAMES list\r\n");
+        return;
+    }
+    for (std::map<std::string, Channel*>::iterator it = channels.begin();
+         it != channels.end(); ++it)
+    {
+        Channel* channel = it->second;
+        std::vector<Client*> members = channel->getMembers();
+        std::string names;
+        for (std::vector<Client*>::iterator m = members.begin();
+             m != members.end(); ++m)
+        {
+            if (client.hasCapability("multi-prefix"))
+            {
+                if (channel->isOperator(**m))
+                    names += "@";
+                if (channel->isVoice(**m))
+                    names += "+";
+            }
+            else
+            {
+                if (channel->isOperator(**m))
+                    names += "@";
+                else if (channel->isVoice(**m))
+                    names += "+";
+            }
+            names += (*m)->getNickName() + " ";
+        }
+        server.sendMessageToClient(client.getFd(),
+            ":localhost 353 " + client.getNickName()
+            + " = " + channel->getName() + " :" + names + "\r\n");
+    }
+    server.sendMessageToClient(client.getFd(),
+        ":localhost 366 " + client.getNickName()
+        + " * :End of /NAMES list\r\n");
 }

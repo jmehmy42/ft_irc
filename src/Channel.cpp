@@ -6,7 +6,7 @@
 /*   By: kwillian <kwillian@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/11/01 22:14:14 by kwillian          #+#    #+#             */
-/*   Updated: 2026/11/01 22:14:15 by kwillian         ###   ########.fr       */
+/*   Updated: 2026/11/20 14:52:53 by kwillian         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -68,25 +68,30 @@ void Channel::addClient(Client* client)
 
 void Channel::removeClient(Client* client)
 {
-    if(client == NULL)
+    if (client == NULL)
         return;
-    for(size_t i = 0; i < _clients.size(); i++)
+
+    for (size_t i = 0; i < _clients.size(); ++i)
     {
-        if(client == _clients[i])
+        if (_clients[i] == client)
         {
             _clients.erase(_clients.begin() + i);
             break;
         }
     }
 
-    for(std::vector<Client*>::iterator it= _members.begin(); it!= _members.end(); ++it)
+    for (std::vector<Client*>::iterator it = _members.begin();
+         it != _members.end(); ++it)
     {
-        if(*it == client)
+        if (*it == client)
         {
             _members.erase(it);
             break;
         }
     }
+
+    removeOperator(*client);
+    removeVoice(*client);
 }
 
 bool Channel::hasClient(Client* client)const
@@ -280,4 +285,33 @@ std::string Channel::getModeArguments()const
         args += " " + oss.str();
     }
     return args;
+}
+
+void Channel::addVoice(Client& client)
+{
+    if (!isVoice(client))
+        _voices.push_back(&client);
+}
+
+void Channel::removeVoice(Client& client)
+{
+    for (std::vector<Client*>::iterator it = _voices.begin();
+         it != _voices.end(); ++it)
+    {
+        if ((*it)->getFd() == client.getFd())
+        {
+            _voices.erase(it);
+            return;
+        }
+    }
+}
+
+bool Channel::isVoice(const Client& client) const
+{
+    for (size_t i = 0; i < _voices.size(); ++i)
+    {
+        if (_voices[i]->getFd() == client.getFd())
+            return true;
+    }
+    return false;
 }

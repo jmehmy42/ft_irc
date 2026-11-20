@@ -2,14 +2,14 @@
 
 Client::Client() : _fd(-1), _passWord(""), _hostName(""), _nickName(""),
                     _userName(""), _realName(""), _buffer(""), _hasPass(false), 
-                    _hasNick(false), _hasUser(false), _isRegistered(false)
+                    _hasNick(false), _hasUser(false), _isRegistered(false), _capabilities()
 {
 }
 
 Client::Client(int fd, const std::string& host) 
                     : _fd(fd), _passWord(""), _hostName(host), _nickName(""),
                     _userName(""), _realName(""), _buffer(""), _hasPass(false), 
-                    _hasNick(false), _hasUser(false), _isRegistered(false)
+                    _hasNick(false), _hasUser(false), _isRegistered(false), _capabilities()
 {
 }
 
@@ -128,6 +128,41 @@ void Client::setIsRegistered(bool status)
     _isRegistered = status;
 }
 
+void Client::addCapability(const std::string& capability)
+{
+    if (!hasCapability(capability))
+        _capabilities.push_back(capability);
+}
+
+void Client::removeCapability(const std::string& capability)
+{
+    for (std::vector<std::string>::iterator it = _capabilities.begin();
+         it != _capabilities.end(); ++it)
+    {
+        if (*it == capability)
+        {
+            _capabilities.erase(it);
+            return;
+        }
+    }
+}
+
+bool Client::hasCapability(const std::string& capability) const
+{
+    for (std::vector<std::string>::const_iterator it = _capabilities.begin();
+         it != _capabilities.end(); ++it)
+    {
+        if (*it == capability)
+            return true;
+    }
+    return false;
+}
+
+const std::vector<std::string>& Client::getCapabilities() const
+{
+    return _capabilities;
+}
+
 // Adds newly received data to the client's buffer.
 // TCP can deliver one IRC command in multiple pieces, so we keep
 // collecting data until a complete command ending with \r\n arrives.
@@ -138,14 +173,11 @@ void Client::appendToBuffer(const std::string& data)
     //ignore empty data, nothing to add in buffer
     if(data.empty())
         return;
-
     //check whether adding new data would exceed the maximum buffer size
     if(_buffer.size() + data.size() > BUFFER_MAX)
         throw std::runtime_error("Error: command failed!");
-    
     //add new received data at the end of the buffer
     _buffer = _buffer + data;
-
     //find the last occurrence of \r\n in complete command
     size_t found = _buffer.rfind("\r\n");
     //bytes after the last \r\n are the part of an incomplete command
