@@ -103,10 +103,16 @@ void executeUser(Server &server, Client &client, std::istringstream &iss)
     std::string username, hostname, servername, realname;
     iss >> username >> hostname >> servername;
     std::getline(iss, realname);
-    if (!realname.empty() && (realname[0] == ' ' || realname[0] == ':'))
+    bool hasColon = false;
+    if (!realname.empty() && realname[0] == ' ')
         realname.erase(0, 1);
+    if (!realname.empty() && realname[0] == ':')
+    {
+        hasColon = true;
+        realname.erase(0, 1);
+    }
     if (username.empty() || hostname.empty() ||
-        servername.empty() || realname.empty())
+        servername.empty() || realname.empty() ||(!hasColon && realname.find(' ') != std::string::npos))
     {
         sendMessage(server, client, 461, "Not enough parameters");
         return;
