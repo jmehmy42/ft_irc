@@ -247,7 +247,7 @@ void executePrivmsg(Server& server, Client& client, std::istringstream& iss)
 
     std::getline(iss, message);
 
-    if (!message.empty() && message[0] == ' ')
+    while (!message.empty() && message[0] == ' ')
         message.erase(0, 1);
 
     if (!message.empty() && message[0] == ':')
