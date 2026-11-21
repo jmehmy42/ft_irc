@@ -54,7 +54,7 @@ class Server
         void signalHandler(int signum);
         void sendMessageToClient(int clientfd, const std::string& message);
         const std::string& getPassword()const;
-        bool    isNickNameTaken(const std::string& nickname) const;
+        bool    isNickNameTaken(const std::string& nickname, int clientfd) const;
         std::map<std::string, Channel*>&    getChannels();
         std::map<std::string, Channel*>::iterator getChannel(const std::string& name);
         void    createChannel(const std::string& name, Client& newClient);
