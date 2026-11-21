@@ -79,6 +79,7 @@ class Channel
         void removeVoice(Client& client);
         bool isVoice(const Client& client) const;
         std::string                 getModeArguments()const;
+        void                        assignNewOperator();
 
         void                        broadcastToMembers(const std::string& message, int excludeFd);
 };

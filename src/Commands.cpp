@@ -247,7 +247,7 @@ void executePrivmsg(Server& server, Client& client, std::istringstream& iss)
 
     std::getline(iss, message);
 
-    if (!message.empty() && message[0] == ' ')
+    while (!message.empty() && (message[0] == ' ' || message[0] == '\t))
         message.erase(0, 1);
 
     if (!message.empty() && message[0] == ':')
@@ -332,7 +332,7 @@ void executePart(Server& server, Client& client, std::istringstream& iss)
 
     std::getline(iss, reason);
 
-    if (!reason.empty() && reason[0] == ' ')
+    while (!reason.empty() && (reason[0] == ' ' || reason[0] == '\t'))
         reason.erase(0, 1);
 
     if (!reason.empty() && reason[reason.size() - 1] == '\r')
@@ -378,6 +378,8 @@ void executePart(Server& server, Client& client, std::istringstream& iss)
 
     channel->removeMember(client);
     channel->removeOperator(client);
+
+	channel->assignNewOperator();
 
     if (channel->isEmpty())
         server.removeChannel(channelName);
