@@ -406,7 +406,7 @@ void executeTopic(Server& server, Client& client, std::istringstream& iss)
 
     std::getline(iss, topic);
 
-    if (!topic.empty() && topic[0] == ' ')
+    while (!topic.empty() && (topic[0] == ' ' || topic[0] == '\t')
         topic.erase(0, 1);
 
     if (!topic.empty() && topic[topic.size() - 1] == '\r')
