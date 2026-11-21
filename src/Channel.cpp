@@ -147,6 +147,18 @@ void Channel::removeOperator(Client& client)
     }
 }
 
+void Channel::assignNewOperator()
+{
+    if (!_operators.empty())
+        return;
+
+    if (_members.empty())
+        return;
+
+    if (_members[0] != NULL)
+        addOperator(*_members[0]);
+}
+
 bool Channel::isOperator(const Client& client) const
 {
     for(size_t i = 0; i < _operators.size(); ++i)
