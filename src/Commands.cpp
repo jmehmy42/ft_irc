@@ -406,7 +406,7 @@ void executeTopic(Server& server, Client& client, std::istringstream& iss)
 
     std::getline(iss, topic);
 
-    if (!topic.empty() && topic[0] == ' ')
+    while (!topic.empty() && (topic[0] == ' ' || topic[0] == '\t')
         topic.erase(0, 1);
 
     if (!topic.empty() && topic[topic.size() - 1] == '\r')
@@ -499,7 +499,7 @@ void executeKick(Server& server, Client& client, std::istringstream& iss)
 
     std::getline(iss, reason);
 
-    if (!reason.empty() && reason[0] == ' ')
+    while (!reason.empty() && (reason[0] == ' ' || reason[0] == '\t'))
         reason.erase(0, 1);
 
     if (!reason.empty() && reason[reason.size() - 1] == '\r')
