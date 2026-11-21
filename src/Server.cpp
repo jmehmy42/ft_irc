@@ -259,11 +259,16 @@ const std::string& Server::getPassword()const
     return _password;
 }
 
-bool Server::isNickNameTaken(const std::string& nickname) const
+bool Server::isNickNameTaken(const std::string& nickname, int clientfd) const
 {
-    for(std::map<int, Client>::const_iterator it = _clients.begin(); it != _clients.end(); ++it)
+    std::string str = nickname;
+	for(size_t i = 0; i < str.size(); i++)
+		str[i] = std::tolower(static_cast<unsigned char>(str[i]));
+	for(std::map<int, Client>::const_iterator it = _clients.begin(); it != _clients.end(); ++it)
     {
-        if(it->second.getNickName() == nickname)
+		if(it->first == clientfd)
+			continue;
+        if(it->second.getNickName() == str)
             return true;
     }
     return false;
