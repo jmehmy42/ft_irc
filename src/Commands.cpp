@@ -145,10 +145,16 @@ void executeJoin(Server& server, Client& client, std::istringstream& iss)
         sendMessage(server, client, 461, "JOIN :Not enough parameters");
         return;
     }
-    if (channelName[0] != '#')
+	
+    //channel name validation checks #hello:world #hello,world # hello, join #
+    for(size_t i = 0; i < channelName.size(); ++i)
     {
-        sendMessage(server, client, 403, channelName + " :No such channel");
-        return;
+        if( channelName[i] == ',' || channelName[i] == ':' || channelName[i] == ' ' 
+            || channelName[0] != '#' || channelName.length() < 2 || channelName.length() > 50)
+            {
+                sendMessage(server, client, 403, channelName + " :No such channel");
+                return;
+            }
     }
     std::map<std::string, Channel*>::iterator it =
         server.getChannel(channelName);
@@ -205,6 +211,19 @@ void executeJoin(Server& server, Client& client, std::istringstream& iss)
     {
         server.sendMessageToClient((*member)->getFd(), message);
     }
+	
+	//show list of names after join channel
+    std::string names;
+    for(std::vector<Client*>::iterator it = members.begin(); it != members.end(); ++it)
+    {
+        if(!names.empty())
+            names = names + " ";
+        if(channel->isOperator(**it))
+            names =  names + "@";
+        names = names + (*it)->getNickName();
+    }
+    sendMessage(server, client, 353, "= " + channelName + " :" + names);
+    sendMessage(server, client, 366, channelName + " :End of /NAMES list");
 }
 
 void executePrivmsg(Server& server, Client& client, std::istringstream& iss)
