@@ -46,20 +46,28 @@ void executeNick(Server &server, Client &client, std::istringstream &iss)
         return;
     }
 
+	unsigned char first = static_cast<unsigned char>(nickname[0]);
+
+    if(nickname.length() > 9 || !std::isalpha(first))
+    {
+        sendMessage(server, client, 432, nickname + " Erroneous nickname");
+        return;
+    }
+
     for (std::string::size_type i = 0; i < nickname.size(); ++i)
     {
         unsigned char c = static_cast<unsigned char>(nickname[i]);
 
         if (!std::isalnum(c) && c != '-' && c != '_')
         {
-            sendMessage(server, client, 432, nickname + "Erroneous nickname");
+            sendMessage(server, client, 432, nickname + " Erroneous nickname");
             return;
         }
     }
 
-    if (server.isNickNameTaken(nickname) == true)
+    if (server.isNickNameTaken(nickname, client.getFd()) == true)
     {
-        sendMessage(server, client, 433, nickname + "Nickname is already in use");
+        sendMessage(server, client, 433, nickname + " Nickname is already in use");
         return;
     }
 
