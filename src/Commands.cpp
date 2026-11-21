@@ -379,6 +379,8 @@ void executePart(Server& server, Client& client, std::istringstream& iss)
     channel->removeMember(client);
     channel->removeOperator(client);
 
+	channel->assignNewOperator();
+
     if (channel->isEmpty())
         server.removeChannel(channelName);
 }
