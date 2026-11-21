@@ -73,6 +73,14 @@ void executeNick(Server &server, Client &client, std::istringstream &iss)
 
     client.setNickName(nickname);
     client.setHasNick(true);
+	
+	if (!client.getIsRegistered() && client.getHasPass() && client.getHasNick() && client.getHasUser())
+    {
+        client.setIsRegistered(true);
+        std::cout << "Client "<< client.getFd()<<" " << client.getNickName() << " is registered" << std::endl;
+        sendMessage(server, client, 001, "Welcome to the IRC server!");
+        return;
+    }
 }
 
 void executeUser(Server &server, Client &client, std::istringstream &iss)
