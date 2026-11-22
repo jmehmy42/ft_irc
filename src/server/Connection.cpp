@@ -71,7 +71,9 @@ void Server::handleClientDisconnection(int clientFd)
     std::cout << "Client "<< clientFd << " disconnected" << std::endl;
     std::map <int, Client> :: iterator itClient = _clients.find(clientFd);
     if(itClient == _clients.end())
+	{
         return;
+	}
 	Client& client = itClient->second;
     for(std::map<std::string, Channel*>::iterator it= _channels.begin(); it != _channels.end();)
     {
