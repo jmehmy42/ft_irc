@@ -48,11 +48,13 @@ Server::Server(int port, const std::string& pass)
     sa.sa_flags = 0;
     sigaction(SIGINT, &sa, NULL);
     sigaction(SIGTERM, &sa, NULL);
+	g_server = this;
 }
 
 Server::~Server()
 {
-    for(size_t i = 0; i < _pollfds.size(); ++i)
+    g_server = NULL;
+	for(size_t i = 0; i < _pollfds.size(); ++i)
     {
         if(_pollfds[i].fd != _fd)
             close(_pollfds[i].fd);
@@ -113,19 +115,11 @@ static void handleSignal(int signum)
 
 void Server::signalHandler(int signum)
 {
-    (void)signum;
     _running = false;
-    std::cout << "Signal interrupt! "<< signum << "Server is shutting down." << std::endl;
+    std::cout << " Signal interrupt! "<< signum << " Server is shutting down." << std::endl;
 }
 
 const std::string& Server::getPassword()const
 {
     return _password;
 }
-
-
-
-
-
-
-
