@@ -14,7 +14,7 @@
 
 //throw std::runtime_error("Failed to create socket");
 
-tatic bool CheckInvalidPort(const std::string& str)
+static bool CheckInvalidPort(const std::string& str)
 {
     if(str.empty())
     {
