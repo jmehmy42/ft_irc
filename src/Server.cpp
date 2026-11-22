@@ -155,8 +155,15 @@ void Server::handleClientMessage(int clientFd)
         buffer[bytes] = '\0';
         //std::cout << "Received from client " << clientFd << ": " << buffer << std::endl;
         Client& client = _clients[clientFd];
-
-        client.appendToBuffer(buffer);
+		try {
+            client.appendToBuffer(std::string(buffer, bytes));
+        }
+        catch (const std::exception& e)
+        {
+            std::cerr<<"Client " <<clientFd << " "<< e.what() << std::endl;
+            handleClientDisconnection(clientFd);
+            return;
+        }
         while(client.hasCompleteCommand())
         {
             std::string cmd = client.extractNextCommand();
