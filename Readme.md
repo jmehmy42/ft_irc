@@ -83,7 +83,7 @@ The project is organized into different classes, each responsible for a specific
 ```text
 ft_irc/
 ├── Makefile
-├── README.md
+├── Readme.md
 ├── includes/
 │   ├── Channel.hpp
 │   ├── Client.hpp
