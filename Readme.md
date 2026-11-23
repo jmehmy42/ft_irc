@@ -147,6 +147,8 @@ Responsible for parsing incoming commands and dispatching them to the appropriat
 
 ---
 
+## Instructions
+
 ## Compilation
 
 Clone the repository:
