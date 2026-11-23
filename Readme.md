@@ -391,7 +391,7 @@ Testing should include both valid commands and invalid input, such as missing pa
 
 ---
 
-## How It Works
+### How It Works
 
 The server follows a client-server architecture.
 
