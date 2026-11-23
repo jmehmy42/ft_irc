@@ -149,7 +149,7 @@ Responsible for parsing incoming commands and dispatching them to the appropriat
 
 ## Instructions
 
-## Compilation
+### Compilation
 
 Clone the repository:
 
@@ -180,7 +180,7 @@ make re
 
 ---
 
-## Running the Server
+### Running the Server
 
 The server requires two arguments:
 
@@ -209,7 +209,7 @@ The server is now ready to accept client connections.
 
 ---
 
-## Connecting to the Server
+### Connecting to the Server
 
 You can use Netcat (`nc`) to connect to the server.
 
@@ -225,7 +225,7 @@ You can open multiple terminals to simulate different users connected to the sam
 
 ---
 
-## User Registration
+### User Registration
 
 Before using the server, a client must complete the registration process.
 
@@ -249,7 +249,7 @@ Once registration is complete, the client can start using the IRC commands.
 
 ---
 
-## Available Commands
+### Available Commands
 
 The following commands are implemented in this project.
 
@@ -295,7 +295,7 @@ Bob receives the message from Alice.
 
 ---
 
-## Channel Modes
+### Channel Modes
 
 The server supports the following channel modes:
 
@@ -330,7 +330,7 @@ Users with voice have a special channel status. This status is relevant to moder
 
 ---
 
-## Capabilities
+### Capabilities
 
 The server supports IRC capability negotiation through the `CAP` command.
 
@@ -359,7 +359,7 @@ CAP END
 
 ---
 
-## Testing
+### Testing
 
 The server can be tested manually using multiple Netcat connections.
 
