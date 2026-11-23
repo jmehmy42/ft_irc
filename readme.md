@@ -82,26 +82,31 @@ The project is organized into different classes, each responsible for a specific
 
 ```text
 ft_irc/
+├── Makefile
+├── README.md
 ├── includes/
 │   ├── Channel.hpp
 │   ├── Client.hpp
 │   ├── Commands.hpp
 │   ├── Executor.hpp
-│   ├── Parser.hpp
 │   └── Server.hpp
-│
-├── src/
-│   ├── Channel.cpp
-│   ├── Client.cpp
-│   ├── Commands.cpp
-│   ├── Executor.cpp
-│   ├── main.cpp
-│   ├── Parser.cpp
-│   └── Server.cpp
-│
-├── channel_README.md
-└── Makefile
-```
+└── src/
+    ├── Channel.cpp
+    ├── Client.cpp
+    ├── Executor.cpp
+    ├── main.cpp
+    ├── commands/
+    │   ├── ChannelCommands.cpp
+    │   ├── Connection.cpp
+    │   ├── Messaging.cpp
+    │   ├── Mode.cpp
+    │   └── Registration.cpp
+    └── server/
+        ├── ChannelManager.cpp
+        ├── ClientManager.cpp
+        ├── Connection.cpp
+        ├── Messaging.cpp
+        └── Server.cpp```
 
 ### Main Classes
 
