@@ -6,7 +6,11 @@
 void executePing(Server& server, Client& client, std::istringstream& iss)
 {
     std::string tokenPing;
-    iss >> tokenPing;
+    std::getline(iss, tokenPing);
+    while (!tokenPing.empty() && (tokenPing[0] == ' ' || tokenPing[0] == '\t'))
+        tokenPing.erase(0, 1);
+    if (!tokenPing.empty() && tokenPing[0] == ':')
+        tokenPing.erase(0, 1);
     if (tokenPing.empty())
     {
         sendMessage(server, client, 409, "No origin specified");
