@@ -2,6 +2,8 @@
 
 # ft_irc
 
+## Description
+
 A lightweight IRC (Internet Relay Chat) server written in C++98, developed as part of the 42 School curriculum.
 
 The goal of this project is to build an IRC server capable of accepting multiple simultaneous clients, handling user registration, managing channels, and allowing users to communicate through private and channel messages.
