@@ -106,7 +106,8 @@ ft_irc/
         ├── ClientManager.cpp
         ├── Connection.cpp
         ├── Messaging.cpp
-        └── Server.cpp```
+        └── Server.cpp
+```
 
 ### Main Classes
 
