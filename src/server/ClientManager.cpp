@@ -25,13 +25,22 @@ Client* Server::getClientByNickname(const std::string& nickname)
 bool Server::isNickNameTaken(const std::string& nickname, int clientfd) const
 {
     std::string str = nickname;
-    for(size_t i = 0; i < str.size(); i++)
-        str[i]= std::tolower(static_cast<unsigned char>(str[i]));        
-    for(std::map<int, Client>::const_iterator it = _clients.begin(); it != _clients.end(); ++it)
+
+    for (size_t i = 0; i < str.size(); i++)
+        str[i] = std::tolower(static_cast<unsigned char>(str[i]));
+
+    for (std::map<int, Client>::const_iterator it = _clients.begin();
+         it != _clients.end(); ++it)
     {
-        if (it-> first == clientfd)
+        if (it->first == clientfd)
             continue;
-        if(it->second.getNickName() == str)
+
+        std::string currentNick = it->second.getNickName();
+
+        for (size_t i = 0; i < currentNick.size(); i++)
+            currentNick[i] = std::tolower(static_cast<unsigned char>(currentNick[i]));
+
+        if (currentNick == str)
             return true;
     }
     return false;

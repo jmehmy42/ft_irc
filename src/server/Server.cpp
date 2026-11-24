@@ -29,11 +29,17 @@ Server::Server(int port, const std::string& pass)
     addr.sin_family = AF_INET;
     addr.sin_addr.s_addr = htonl(INADDR_ANY);
     addr.sin_port = htons(_port);
+    // if (bind(_fd, (struct sockaddr*)&addr, sizeof(addr)) == -1)
+    // {
+    //     closeSocketFd();
+    //     throw std::runtime_error("Failed to bind socket");
+    // }
     if (bind(_fd, (struct sockaddr*)&addr, sizeof(addr)) == -1)
     {
         closeSocketFd();
         throw std::runtime_error("Failed to bind socket");
     }
+    
     if (listen(_fd, SOMAXCONN) == -1)
     {
         closeSocketFd();
