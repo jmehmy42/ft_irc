@@ -20,6 +20,7 @@ class Client
         std::string _userName;
         std::string _realName;
         std::string _buffer;
+        std::string _outputBuffer;
 
         bool        _hasPass;
         bool        _hasNick;
@@ -56,6 +57,7 @@ class Client
         void            appendToBuffer(const std::string& data);
         bool            hasCompleteCommand()const;
         std::string     extractNextCommand();
+        std::string&    getOutputBuffer();
         void addCapability(const std::string& capability);
         void removeCapability(const std::string& capability);
         bool hasCapability(const std::string& capability) const;

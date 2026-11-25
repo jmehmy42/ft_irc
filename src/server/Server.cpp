@@ -29,11 +29,6 @@ Server::Server(int port, const std::string& pass)
     addr.sin_family = AF_INET;
     addr.sin_addr.s_addr = htonl(INADDR_ANY);
     addr.sin_port = htons(_port);
-    // if (bind(_fd, (struct sockaddr*)&addr, sizeof(addr)) == -1)
-    // {
-    //     closeSocketFd();
-    //     throw std::runtime_error("Failed to bind socket");
-    // }
     if (bind(_fd, (struct sockaddr*)&addr, sizeof(addr)) == -1)
     {
         closeSocketFd();
@@ -95,20 +90,34 @@ void Server::run()
     _pollfds.push_back(pfd);
     while (_running)
     {
+        updatePollEvents();
         int activity = poll(_pollfds.data(), _pollfds.size(), -1);
         if( activity < 0)
         {
             if(errno == EINTR)
                 break;
             throw std::runtime_error("Poll failed!");
-            break;
         }
         if (_pollfds[0].revents & POLLIN)
             handleNewConnection();
-        for (size_t i = 1; i < _pollfds.size(); ++i)
+        for (size_t i = 1; i < _pollfds.size();)
         {
-            if(_pollfds[i].revents & POLLIN)
-                handleClientMessage(_pollfds[i].fd);
+            int clientfd = _pollfds[i].fd;
+            short revents = _pollfds[i].revents;
+            if(revents & (POLLERR | POLLHUP | POLLNVAL))
+            {
+                handleClientDisconnection(clientfd);
+                continue;
+            }
+            if(revents & POLLIN)
+                handleClientMessage(clientfd);
+            if(_clients.find(clientfd) == _clients.end())
+                continue;
+            if(revents & POLLOUT)
+                handleClientWrite(clientfd);
+            if(_clients.find(clientfd) == _clients.end())
+                continue;
+            i++;
         }
     }
 }
@@ -128,4 +137,19 @@ void Server::signalHandler(int signum)
 const std::string& Server::getPassword()const
 {
     return _password;
+}
+
+void Server::updatePollEvents()
+{
+    for(size_t i = 1; i < _pollfds.size(); ++i)
+    {
+        int clientfd = _pollfds[i].fd;
+        std::map<int, Client>::iterator it ;
+        it = _clients.find(clientfd);
+        if(it == _clients.end())
+            continue;
+        _pollfds[i].events = POLLIN;
+        if(!it->second.getOutputBuffer().empty())
+            _pollfds[i].events |= POLLOUT;
+    }
 }

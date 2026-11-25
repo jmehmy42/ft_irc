@@ -61,6 +61,8 @@ class Server
         Client* getClientByNickname(const std::string& nickname);
         void    broadcastMessage(const std::string& message, int excludeFd);
 		void	notifySharedChannelsQuit(const Client& client, const std::string& quitMessage);
+        void    updatePollEvents();
+        void    handleClientWrite(int clientfd);
 };
     void sendMessage(Server& server, Client& client, int code, const std::string& text);
 

@@ -161,6 +161,11 @@ const std::vector<std::string>& Client::getCapabilities() const
     return _capabilities;
 }
 
+std::string& Client::getOutputBuffer()
+{
+    return _outputBuffer;
+}
+
 void Client::appendToBuffer(const std::string& data)
 {
     if(data.empty())

@@ -17,14 +17,14 @@ static bool CheckInvalidPort(const std::string& str)
     }
     if(str.length() > 5)
     {
-        std::cerr << "Error: Invalid Port Range (1 to 65535)"
+        std::cerr << "Error: Invalid Port Range (1024 to 65535)"
                   << std::endl;
         return true;
     }
     int port = std::atoi(str.c_str());
-    if (port < 1 || port > 65535)
+    if (port < 1024 || port > 65535)
     {
-        std::cerr << "Error: Invalid Port Range (1 to 65535)"
+        std::cerr << "Error: Invalid Port Range (1024 to 65535)"
                   << std::endl;
         return true;
     }
@@ -41,10 +41,17 @@ int main(int ac, char **av)
     }
     if (CheckInvalidPort(av[1]))
         return 1;
+    std::string password(av[2]);
+    if(password.empty() || password.length() > 15)
+    {
+        std::cerr << "Error: Password must be between 1 and 15 characters"
+                  << std::endl;
+        return 1;
+    }
     int port = std::atoi(av[1]);
     try
     {
-        Server server(port, av[2]);
+        Server server(port, password);
         server.run();
     }
     catch (const std::exception& e)

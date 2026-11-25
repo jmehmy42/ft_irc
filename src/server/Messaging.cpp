@@ -26,9 +26,10 @@ void	Server::notifySharedChannelsQuit(const Client& client, const std::string& q
 
 void Server::sendMessageToClient(int clientfd, const std::string& message)
 {
-    ssize_t bytesent = send(clientfd, message.c_str(), message.length(), 0);
-    if(bytesent == -1)
-        std::cerr << "send failed to client " << clientfd<< std::endl;
+    std::map<int, Client>::iterator it = _clients.find(clientfd);
+    if (it == _clients.end() || message.empty())
+        return;
+    it->second.getOutputBuffer() += message;
 }
 
 void sendMessage(Server& server, Client& client, int code, const std::string& text)
@@ -49,5 +50,23 @@ void Server::broadcastMessage(const std::string& message, int excludeFd)
     {
         if(it->first != excludeFd)
             sendMessageToClient(it->first, message);
+    }
+}
+
+void Server::handleClientWrite(int clientfd)
+{
+    std::map<int, Client>::iterator it = _clients.find(clientfd);
+    if (it == _clients.end())
+        return;
+    std::string& outputBuffer = it->second.getOutputBuffer();
+    if (outputBuffer.empty())
+        return;
+    ssize_t bytesSent = send(clientfd, outputBuffer.c_str(), outputBuffer.size(), 0);
+    if (bytesSent > 0)
+        outputBuffer.erase(0, bytesSent);
+    else 
+    {
+        std::cerr << "send failed to client " << clientfd<< std::endl;
+        handleClientDisconnection(clientfd);
     }
 }
