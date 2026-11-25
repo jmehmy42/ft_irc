@@ -173,14 +173,20 @@ void Client::appendToBuffer(const std::string& data)
     if(_buffer.size() + data.size() > BUFFER_MAX)
         throw std::runtime_error("Error: command failed!");
     _buffer = _buffer + data;
-    size_t found = _buffer.rfind("\r\n");
-    size_t currentlineSize;
-    if(found == std::string::npos)
-        currentlineSize = _buffer.size();
-    else
-        currentlineSize = _buffer.size() - (found + 2);
-    if( currentlineSize > LINE_MAX)
-        throw std::runtime_error("Error: line too long");
+    size_t start = 0;
+    size_t end = _buffer.find("\r\n", start);
+    while(end != std::string::npos)
+    { 
+        if(end- start > LINE_MAX)
+            throw std::runtime_error("Error: line too long");
+        start = end + 2;
+        end = _buffer.find("\r\n", start);
+    }
+    size_t  remaining = _buffer.size() - start;
+    if(remaining > 0 && _buffer[_buffer.size() - 1] == '\r')
+        remaining--;
+    if(remaining > LINE_MAX - 2)
+            throw std::runtime_error("Error: line too long");
 }
 
 bool Client::hasCompleteCommand() const
