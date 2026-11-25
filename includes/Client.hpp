@@ -8,7 +8,7 @@
 #include <vector>
 
 #define LINE_MAX 512
-#define BUFFER_MAX 1024
+#define BUFFER_MAX 2048
 
 class Client
 {
