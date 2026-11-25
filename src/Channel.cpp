@@ -19,8 +19,6 @@ Channel::~Channel()
 {
 }
 
-//gettters
-
 std::string Channel::getName()const
 {
     return _name;
