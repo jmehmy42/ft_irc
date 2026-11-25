@@ -87,10 +87,8 @@ void Channel::assignNewOperator()
 {
     if (!_operators.empty())
         return;
-
     if (_members.empty())
         return;
-
     if (_members[0] != NULL)
         addOperator(*_members[0]);
 }
