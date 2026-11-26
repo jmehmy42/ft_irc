@@ -9,7 +9,12 @@ INCLUDES = -Iincludes
 SRC_DIR = src
 OBJ_DIR = obj
 
-SRC = main.cpp Server.cpp Client.cpp Parser.cpp Commands.cpp Executor.cpp Channel.cpp
+SRC = main.cpp Client.cpp Executor.cpp Channel.cpp \
+	  server/Server.cpp server/Connection.cpp server/Messaging.cpp \
+	  server/ClientManager.cpp server/ChannelManager.cpp \
+	  commands/Registration.cpp commands/ChannelCommands.cpp \
+	  commands/Messaging.cpp commands/Mode.cpp commands/Connection.cpp
+
 SRCS = $(addprefix $(SRC_DIR)/, $(SRC))
 
 OBJS = $(addprefix $(OBJ_DIR)/, $(SRC:.cpp=.o))
@@ -20,7 +25,7 @@ $(NAME): $(OBJS)
 	@$(CC) $(FLAGS) $(INCLUDES) -o $(NAME) $(OBJS)
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
-	@mkdir -p $(OBJ_DIR)
+	@mkdir -p $(dir $@)
 	$(CC) $(FLAGS) $(INCLUDES) -c $< -o $@
 
 clean:

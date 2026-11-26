@@ -1,22 +1,8 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   Executor.cpp                                       :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: kwillian <kwillian@student.42.fr>          +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2026/11/11 03:49:11 by kwillian          #+#    #+#             */
-/*   Updated: 2026/11/20 14:11:50 by kwillian         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
 
 #include "Executor.hpp"
 #include "Server.hpp"
 #include "Client.hpp"
 #include "Commands.hpp"
-
-#include <sstream>
-#include <cctype>
 
 Executor::Executor()
 {
@@ -59,10 +45,10 @@ void Executor::execute(Server& server, Client& client,
         executePing(server, client, iss);
     else if (command == "QUIT")
         executeQuit(server, client, iss);
-    else if(command == "PONG")
-        return;
     else if(command == "CAP")
-         executeCap(server, client, iss);
+        executeCap(server, client, iss);
+    else if(command == "PONG")
+        ;
     else
         sendMessage(server, client, 421, "unknown command");
 }

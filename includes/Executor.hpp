@@ -28,5 +28,4 @@ class Executor
                             const std::string& message);
 };
 
-void sendMessage(Server& server, Client& client, int code, const std::string& text);
 #endif

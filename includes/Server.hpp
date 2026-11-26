@@ -20,28 +20,25 @@
 #include <vector>
 #include <map>
 #include <csignal>
-#include <sstream>
+
 #include "Client.hpp"
 #include "Executor.hpp"
 #include "Channel.hpp"
 #include "Commands.hpp"
-
 class Channel;
 
 class Server
 {
     private:
-        int _port;
+        int         _port;
         std::string _password;
-        int _fd;
-        int _running;
-        Executor _executor;
-
-        std::map<int, Client>           _clients; // easy to find client using fd
+        int         _fd;
+        int         _running;
+        Executor    _executor;
+        std::map<int, Client>           _clients;
 	    std::vector<struct pollfd>      _pollfds;
         std::map<std::string, Channel*> _channels;
-        // Server(const Server& other);
-        // Server& operator=(const Server& other);
+        
         void closeSocketFd();
 
     public:
@@ -64,7 +61,10 @@ class Server
         Client* getClientByNickname(const std::string& nickname);
         void    broadcastMessage(const std::string& message, int excludeFd);
 		void	notifySharedChannelsQuit(const Client& client, const std::string& quitMessage);
+        void    updatePollEvents();
+        void    handleClientWrite(int clientfd);
 };
     void sendMessage(Server& server, Client& client, int code, const std::string& text);
 
 #endif
+

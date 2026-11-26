@@ -1,14 +1,3 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   Channel.cpp                                        :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: kwillian <kwillian@student.42.fr>          +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2026/11/01 22:14:14 by kwillian          #+#    #+#             */
-/*   Updated: 2026/11/20 14:52:53 by kwillian         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
 
 #include "Channel.hpp"
 
@@ -29,8 +18,6 @@ Channel::Channel(const std::string& name, Client& creator) : _name(name),_topic(
 Channel::~Channel()
 {
 }
-
-//gettters
 
 std::string Channel::getName()const
 {
@@ -94,6 +81,16 @@ void Channel::removeClient(Client* client)
     removeVoice(*client);
 }
 
+void Channel::assignNewOperator()
+{
+    if (!_operators.empty())
+        return;
+    if (_members.empty())
+        return;
+    if (_members[0] != NULL)
+        addOperator(*_members[0]);
+}
+
 bool Channel::hasClient(Client* client)const
 {
     if(client == NULL)
@@ -145,18 +142,6 @@ void Channel::removeOperator(Client& client)
             return;
         }
     }
-}
-
-void Channel::assignNewOperator()
-{
-    if (!_operators.empty())
-        return;
-
-    if (_members.empty())
-        return;
-
-    if (_members[0] != NULL)
-        addOperator(*_members[0]);
 }
 
 bool Channel::isOperator(const Client& client) const
