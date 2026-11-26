@@ -1,4 +1,4 @@
-*This project has been created as part of the 42 curriculum by jmehmy kwillian.*
+*This project has been created as part of the 42 curriculum by jmehmy,kwillian.*
 
 # ft_irc
 
